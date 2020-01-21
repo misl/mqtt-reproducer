@@ -1,12 +1,11 @@
 package org.acme.quarkus.sample;
 
 import io.smallrye.reactive.messaging.annotations.Channel;
+import io.smallrye.reactive.messaging.annotations.Emitter;
 import org.reactivestreams.Publisher;
 
 import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -17,6 +16,12 @@ public class PriceResource {
 
     @Inject
     @Channel("my-data-stream") Publisher<Double> prices;
+
+    @Inject
+    @Channel("something") Emitter<String> something;
+
+    @Inject
+    @Channel("topic-price") Emitter<Integer> topicPrice;
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
@@ -29,5 +34,20 @@ public class PriceResource {
     @Produces(MediaType.SERVER_SENT_EVENTS)
     public Publisher<Double> stream() {
         return prices;
+    }
+
+
+    @POST
+    @Path("/something")
+    @Produces(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.TEXT_PLAIN)
+    public void something( String content ) {
+        something.send( content );
+    }
+
+    @POST
+    @Consumes(MediaType.TEXT_PLAIN)
+    public void postPrice( String content ) {
+        topicPrice.send( Integer.parseInt( content ) );
     }
 }
